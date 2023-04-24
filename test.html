@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Local Chat App</title>
+    <style>
+      body {
+        background-color: #f0f0f0;
+        font-family: 'Helvetica Neue', sans-serif;
+      }
+      .container {
+        width: 1200px;
+        margin: 0 auto;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px #bbb;
+      }
+      .input {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 5px;
+        font-size: 16px;
+        border: 1px solid #bbb;
+        border-radius: 5px;
+        outline: none;
+      }
+      .button {
+        display: block;
+        width: 80%;
+        margin: 0 auto;
+        margin-top: 10px;
+        padding: 8px;
+        background-color: #2196F3;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .output {
+        height: 400px;
+        margin-top: 20px;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #bbb;
+        border-radius: 5px;
+        overflow-y: scroll;
+        scrollbar-width: thin;
+      }
+      .new-chat {
+        display: block;
+        text-align: center;
+        margin-top: 40px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .output pre {
+      margin: 0;
+      padding: 0;
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+      word-wrap: break-word;
+      line-height: 1.5em;
+      }
+      .output pre * {
+      margin: 0;
+      padding: 0;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+      }
+      .message{
+        white-space: pre-wrap;
+      }
+      .response{
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <input class="input" id="inputBox" type="text" placeholder="输入你要说的话...">
+      <button class="button" id="sendBtn">发送</button>
+      <div class="output" id="outputBox"></div>
+      <a class="new-chat" id="newChat">新对话</a>
+    </div>
+    <script>
+      // 极简版本地问答网页，含聊天记录
+      // 修改API地址和KEY，双击即可使用。都在本地，对KEY的使用很安全
+      // 会比部署在chat酱这样的网站上要慢一些，作为尝鲜试一下
+      // 比“https://chat.wuguokai.cn/#/chat”之类网站的GPT-3.5模型回复的慢，回答质量也有待提升
+      // 待解决问题：
+      //     1.输入框还不支持换行显示，非常的不方便，不知道如何实现
+      //     2.回复很慢，是等一段时间，突然出现全部结果，不知道如何实现逐渐输出结果的效果，也不知道如何加快回答速度
+      //     3.上下文联动效果差，只能人为叫它回顾前几轮对话，再回答新问题，一般都会起效，偶尔也会出现记不住上下文的情况
+      //     4.科学上网技能有待提升，新必应和官网API的体验效果未知
+      const apiUrl = "API2D代理网址";
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer API2D_Key'
+      };
+
+      let sessionId = null;
+      const inputBox = document.getElementById("inputBox");
+      const sendBtn = document.getElementById("sendBtn");
+      const outputBox = document.getElementById("outputBox");
+      const newChat = document.getElementById("newChat");
+
+      function sendMessage(message) {
+        let data = {
+          "model": "gpt-3.5-turbo",
+          "messages": [{"role": "user", "content": message}],
+          "temperature": 0.5
+        };
+        if (sessionId !== null) {
+          data.session_id = sessionId;
+        }
+
+        return fetch(apiUrl, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(data)
+        }).then(response => response.json()).then(result => {
+          console.log(result);
+          sessionId = result.session_id;
+          return result.choices[0].message.content.trim();
+        });
+      }
+
+      function sendMsg() {
+        const message = inputBox.value;
+        if (message === '') {
+          return;
+        }
+        // 在输出框中添加“生成中”提示消息
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        messageDiv.textContent = message;
+        outputBox.appendChild(messageDiv);
+
+        const responseDiv = document.createElement('div');
+        responseDiv.classList.add('response');
+        responseDiv.textContent = '生成中...';
+        outputBox.appendChild(responseDiv);
+      
+        sendMessage(message).then(response => {
+          // 删除“生成中”提示消息
+          outputBox.removeChild(responseDiv);
+        
+          const robotResponse = response.split('\n').map(line => line.trim()).join('<br>');
+          const formattedMessage = message.replace(/\n/g, '<br>'); //这里还没有解决输入问题的换行符问题，待解决！！！！！！！！！！！！！！
+          outputBox.insertAdjacentHTML('beforeend', `<pre><strong>你：</strong></pre><ul>${formattedMessage}</ul>
+            <pre><strong>小助手：</strong></pre>
+            <ul>${robotResponse.split('\n').map(line => `<li>${line}</li>`).join('')}</ul> 
+          `); //初步实现换行回答，有助于显示答案的逻辑
+          // 自动滚动输出框
+          outputBox.scrollTop = outputBox.scrollHeight;
+        }).catch(error => {
+          console.error(error);
+        });
+
+        inputBox.value = '';
+      }
+
+
+      sendBtn.addEventListener('click', sendMsg);
+
+      newChat.addEventListener('click', () => {
+        sessionId = null;
+        inputBox.value = '';
+        outputBox.innerHTML = '';
+      });
+    </script>
+  </body>
+</html>
