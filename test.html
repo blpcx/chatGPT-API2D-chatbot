@@ -7,31 +7,34 @@
   <style>
     body {
       background-color: #f0f0f0;
-      font-family: 'Helvetica Neue', sans-serif;
+      font-family: 'Arial', sans-serif;
     }
 
     .container {
       width: 1250px;
-      height: 650px;
+      height: 690px;
       margin: 0 auto;
-      padding-top: 20px;
-      padding-bottom: 20px;
+      padding-top: 10px;
+      padding-bottom: 0px;
       background-color: #fff;
       border-radius: 10px;
       box-shadow: 0px 0px 10px #bbb;
+
     }
 
     .input {
       width: 99%;
-      margin-bottom: 10px;
+      /* height: 5%; */
+      margin-bottom: 5px;
       padding: 5px;
       font-size: 16px;
-      border: 1px solid #bbb;
-      border-radius: 5px;
-      outline: none;
+      border: 1.5px solid rgb(177, 180, 246);
+      border-radius: 10px;
+      outline: 3px solid rgb(144, 149, 255);
+      outline-offset: -1px;
     }
 
-    .button {
+    /* .button {
       display: block;
       width: 5%;
       margin: 0 auto;
@@ -43,20 +46,22 @@
       border-radius: 5px;
       cursor: pointer;
       font-size: 14px;
-    }
+    } */
 
     .output {
-      height: 75%;
-      margin-top: 20px;
+      height: 90%;
+      margin-top: 10px;
       padding: 10px;
       font-size: 16px;
-      border: 1px solid #bbb;
-      border-radius: 5px;
       overflow-y: scroll;
       scrollbar-width: thin;
+      border: 1.5px solid rgb(177, 180, 246);
+      border-radius: 10px;
+      outline: 3px solid rgb(1, 255, 200);
+      outline-offset: -1px;
     }
 
-    .new-chat {
+    /* .new-chat {
       text-align: center;
       display: block;
       width: 5%;
@@ -69,12 +74,12 @@
       border-radius: 5px;
       cursor: pointer;
       font-size: 14px;
-    }
+    } */
 
     .output pre {
       margin: 0;
       padding: 0;
-      font-family: monospace;
+      font-family: 'Arial';
       white-space: pre-wrap;
       word-break: break-all;
       word-wrap: break-word;
@@ -84,50 +89,79 @@
     .output pre * {
       margin: 0;
       padding: 0;
-      font-family: inherit;
+      /* font-family: inherit; */
+      font-family: 'Arial';
       font-size: inherit;
       line-height: inherit;
     }
 
-    .message {
+    /* .message {
       white-space: pre-wrap;
+      font-family: 'Arial';
       background-color: rgba(152, 251, 152, 0.3);
     }
 
     .response {
       white-space: pre-wrap;
-      background-color: rgba(135, 206, 250,0.5);
+      font-family: 'Arial';
+      background-color: rgba(135, 206, 250, 0.5);
+    } */
+
+    .user {
+      margin-left: 0px;
+      margin-top: 15px;
+      color: rgb(16, 110, 6);
+      /* 设置颜色 */
+    }
+
+    .bot {
+      margin-left: 0px;
+      margin-top: 15px;
+      color: rgb(0, 13, 255);
+      /* 设置颜色 */
     }
 
     .user-message {
+      font-family: 'Arial';
+      color: rgb(16, 110, 6);
       background-color: rgba(152, 251, 152, 0.3);
+      border-radius: 10px;
+      margin-left: 20px;
+      margin-top: 15px;
+      white-space: pre-wrap;
     }
 
     .bot-message {
-      background-color: rgba(135, 206, 250,0.5);
+      font-family: 'Arial';
+      color: rgb(0, 13, 255);
+      background-color: rgba(135, 206, 250, 0.5);
+      border-radius: 10px;
+      margin-left: 20px;
+      margin-top: 15px;
+      white-space: pre-wrap;
     }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <input class="input" id="inputBox" type="text" placeholder="输入你的问题...">
-    <button class="button" id="sendBtn">发送</button>
+    <input class="input" id="inputBox" type="text" placeholder="输入你的问题，enter键确认发送……">
+    <!-- <button class="button" id="sendBtn">发送</button> -->
     <div class="output" id="outputBox"></div>
-    <a class="new-chat" id="newChat">新对话</a>
+    <!-- <a class="new-chat" id="newChat">新对话</a> -->
   </div>
   <script>
     // JavaScript代码
     const apiUrl = "https://openai.api2d.net/v1/chat/completions";
     const headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer {}'
+      'Authorization': 'Bearer {KEY}'
     };
     let sessionId = null;
     const inputBox = document.getElementById("inputBox");
-    const sendBtn = document.getElementById("sendBtn");
+    // const sendBtn = document.getElementById("sendBtn");
     const outputBox = document.getElementById("outputBox");
-    const newChat = document.getElementById("newChat");
+    // const newChat = document.getElementById("newChat");
     function sendMessage(message) {
       let data = {
         "model": "gpt-3.5-turbo-0301",
@@ -154,21 +188,31 @@
       }
       // 在输出框中添加“生成中”提示消息
       let messageDiv = document.createElement('div');
-      messageDiv.classList.add('message');
-      messageDiv.textContent = message;
+      // messageDiv.classList.add('message');
+      messageDiv.textContent = ['你：' + message];
       outputBox.appendChild(messageDiv);
       let responseDiv = document.createElement('div');
-      responseDiv.classList.add('response');
-      responseDiv.textContent = '生成中...';
+      // responseDiv.classList.add('response');
+      responseDiv.textContent = '生成中……';
       outputBox.appendChild(responseDiv);
+
       sendMessage(message).then(response => {
         // 删除“生成中”提示消息
         outputBox.removeChild(messageDiv);
         outputBox.removeChild(responseDiv);
-        let formattedResponse = response.split('\n').map(line => line.trim()).join('<br>');
-        let formattedMessage = message.split('\n').map(line => line.trim()).join('<br>');
-        outputBox.insertAdjacentHTML('beforeend', `<pre><strong>你：</strong></pre><ul class="user-message">${formattedMessage}</ul>
-            <pre><strong>gpt-3.5-turbo-0301：</strong></pre><ul class="bot-message">${formattedResponse.split('\n').map(line => `<li>${line}</li>`).join('')}</ul>`);
+        // let formattedResponse = response.split('\n').map(line => line.trim()).join('<br>');
+        // let formattedMessage = message.split('\n').map(line => line.trim()).join('<br>');
+        // outputBox.insertAdjacentHTML('beforeend', `<pre><strong>你：</strong></pre><ul class="user-message">${formattedMessage}</ul>
+        //     <pre><strong>gpt-3.5-turbo-0301：</strong></pre><ul class="bot-message">${formattedResponse.split('\n').map(line => `<li>${line}</li>`).join('')}</ul>`);
+        // outputBox.insertAdjacentHTML('beforeend', `<pre><strong>你：</strong></pre><pre class="user-message">${message}</pre>
+        //     <pre><strong>gpt-3.5-turbo-0301：</strong></pre><pre class="bot-message">${response}</pre>`);
+        outputBox.insertAdjacentHTML('beforeend', `
+          <div class="user">我：</div>
+          <div class="user-message">${message}</div>
+          <div class="bot">gpt-3.5-turbo-0301：</div>
+          <div class="bot-message">${response}</div>
+        `);
+
         // 自动滚动输出框
         outputBox.scrollTop = outputBox.scrollHeight;
       }).catch(error => {
@@ -177,7 +221,7 @@
 
       inputBox.value = '';
     }
-    sendBtn.addEventListener('click', sendMsg);
+    // sendBtn.addEventListener('click', sendMsg);
     inputBox.addEventListener("keyup", function (event) {
       if (event.keyCode === 13) {
         // 只有在输入框非空的情况下才能发送消息
@@ -186,11 +230,11 @@
         }
       }
     });
-    newChat.addEventListener('click', () => {
-      sessionId = null;
-      inputBox.value = '';
-      outputBox.innerHTML = '';
-    });
+    // newChat.addEventListener('click', () => {
+    //   sessionId = null;
+    //   inputBox.value = '';
+    //   outputBox.innerHTML = '';
+    // });
   </script>
 </body>
 
