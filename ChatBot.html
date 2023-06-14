@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>gpt-3.5-turbo/gpt-3.5-turbo-16k两倍价格</title>
+    <style>
+      body {
+        background-color: #f0f0f0;
+        font-family: 'Arial', sans-serif;
+      }
+      .container {
+        width: 1000px;
+        height: 690px;
+        margin: 0 auto;
+        padding-top: 10px;
+        padding-bottom: 0px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px #bbb;
+        display: flex;
+        flex-direction: column-reverse;
+      }
+      .input {
+        width: 98.5%;
+        margin-bottom: 5px;
+        padding: 5px;
+        font-size: 16px;
+        border: 1.5px solid rgb(177, 180, 246);
+        border-radius: 10px;
+        outline: 3px solid rgba(102, 109, 236, 0.158);
+        outline-offset: -1px;
+      }
+      .output {
+        height: 90%;
+        margin-bottom: 10px;
+        padding: 10px;
+        font-size: 16px;
+        overflow-y: scroll;
+        scrollbar-width: thin;
+        border: 1.5px solid rgba(26, 169, 138, 0.421);
+        border-radius: 10px;
+        outline: 3px solid rgba(26, 169, 138, 0.312);
+        outline-offset: -1px;
+        display: flex;
+        flex-direction: column;
+      }
+      .user {
+        margin-top: 15px;
+        color: rgb(16, 110, 6);
+        font-family: 'Arial', sans-serif;
+        border-radius: 10px;
+      }
+      .bot {
+        margin-top: 15px;
+        color: rgb(0, 13, 255);
+        font-family: 'Arial', sans-serif;
+        border-radius: 10px;
+      }
+      .user-message {
+        font-family: 'Arial';
+        color: rgb(16, 110, 6);
+        background-color: rgba(152, 251, 152, 0.3);
+        border-radius: 10px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        white-space: pre-wrap;
+      }
+      .bot-message {
+        font-family: 'Arial';
+        color: rgb(0, 13, 255);
+        background-color: rgba(135, 206, 250, 0.5);
+        border-radius: 10px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        white-space: pre-wrap;
+        display: inline-block;
+      }
+      .form-container {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        width: 100%;
+        position: relative;
+        font-family: 'Arial';
+        font-size: 16px;
+      }
+      #balance {
+        font-family: 'Arial';
+        font-size: 16px;
+        text-align: center;
+        border: 1.5px solid rgb(0, 164, 28); /*1.5*/
+        border-radius: 10px;
+        color: rgb(0, 168, 98);
+        padding: 5px; /*5*/
+      }
+      button {
+        width: 5%;
+        color: rgb(48, 139, 6);
+        border: none;
+        border-radius: 10px;
+        font-family: 'Arial';
+        font-size: 16px;
+        margin-left: 10px;
+      }
+      button:hover {
+        cursor: pointer;
+      }
+      button:focus {
+        outline: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="form-container">
+        <select id="modelSelect" style="font-family: 'Arial', sans-serif; font-size: 16px;border: 2px solid rgba(0, 0, 0, 0.346); border-radius: 10px; color: rgba(0, 0, 0, 0.695);padding: 5px;">
+          <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+          <option value="gpt-3.5-turbo-0301">gpt-3.5-turbo-0301</option>
+          <option value="gpt-3.5-turbo-0613">gpt-3.5-turbo-0613</option>
+          <option value="gpt-3.5-turbo-16k">gpt-3.5-turbo-16k</option>
+          <option value="gpt-3.5-turbo-16k-0613">gpt-3.5-turbo-16k-0613</option>
+          <option value="gpt-4">gpt-4</option>
+          <option value="gpt-4-0314">gpt-4-0314</option>
+          <option value="gpt-4-0613">gpt-4-0613</option>
+        </select>
+        <input type="number" id="temperature" placeholder="temperature" step="0.1" min="0" max="1" value="0.2" style="font-family: 'Arial', sans-serif; font-size: 16px;border: 2px solid rgba(0, 0, 0, 0.346); border-radius: 10px; color: rgba(0, 0, 0, 0.695);padding: 5px;">
+        <input type="number" id="maxToken" placeholder="max_token" step="1" min="1" value="1000" style="font-family: 'Arial', sans-serif; font-size: 16px;border: 2px solid rgba(0, 0, 0, 0.346); border-radius: 10px; color: rgba(0, 0, 0, 0.695);padding: 5px;">
+        <button type="button" onclick="fetchBalance()" style="font-family: 'Arial', sans-serif; font-size: 16px; color: rgba(0, 0, 0, 0.695); border: none; border-radius: 10px; margin-left: 10px;">余额</button>
+        <input type="text" id="balance" name="balance" readonly style="font-family: 'Arial', sans-serif; font-size: 16px; text-align: center; border: 2px solid rgba(0, 0, 0, 0.346); border-radius: 10px; color: rgba(0, 0, 0, 0.695); padding: 5px;"><br><br>
+      </div>
+      <input class="input" id="inputBox" type="text" placeholder="输入你的问题，enter键确认发送……">
+      <div class="output" id="outputBox"></div>
+    </div>
+    <script>
+      // JavaScript代码
+      const apiUrl = "https://oa.api2d.net/v1/chat/completions";
+      const KEY = 'YOUR-KEY';
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${KEY}`
+      };
+      let sessionId = null;
+      const inputBox = document.getElementById("inputBox");
+      const outputBox = document.getElementById("outputBox");
+      const modelSelect = document.getElementById("modelSelect");
+      const temperatureInput = document.getElementById("temperature");
+      const maxTokenInput = document.getElementById("maxToken");
+
+      function sendMessage(message) {
+        let data = {
+          "model": modelSelect.value,
+          "messages": [{ "role": "user", "content": message }],
+          "temperature": parseFloat(temperatureInput.value),
+          "max_tokens": parseInt(maxTokenInput.value)
+        };
+        if (sessionId !== null) {
+          data.session_id = sessionId;
+        }
+        return fetch(apiUrl, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(data)
+        }).then(response => response.json()).then(result => {
+          console.log(result);
+          sessionId = result.session_id;
+          const responseContent = result.choices[0].message.content.trim();
+
+          const botDiv = document.createElement("div");
+          botDiv.className = "bot";
+          outputBox.appendChild(botDiv);
+
+          const responseContentDiv = document.createElement("div");
+          responseContentDiv.className = "bot-message";
+          botDiv.append(responseContentDiv);
+
+          const responseLength = responseContent.length;
+          let i = 0;
+          const outputInterval = setInterval(() => {
+            if (i >= responseLength) {
+              clearInterval(outputInterval);
+            } else {
+              const responseChar = responseContent.charAt(i);
+              const span = document.createElement("span");
+              span.textContent = responseChar;
+              responseContentDiv.append(span);
+              outputBox.scrollTop = outputBox.scrollHeight;
+              i++;
+            }
+          }, 30);
+        });
+      }
+
+      function sendMsg() {
+        let message = inputBox.value;
+        if (message === '') {
+          return;
+        }
+
+        let messageDiv = document.createElement('div');
+        messageDiv.className = 'user';
+        messageDiv.textContent = '我：';
+        outputBox.appendChild(messageDiv);
+
+        let messageContent = document.createElement('div');
+        messageContent.className = 'user-message';
+        messageContent.textContent = message;
+        messageDiv.appendChild(messageContent);
+
+        let responseDiv = document.createElement('div');
+        responseDiv.className = 'bot';
+        responseDiv.textContent = modelSelect.value + '：';
+        outputBox.appendChild(responseDiv);
+
+        outputBox.scrollTop = outputBox.scrollHeight;
+
+        sendMessage(message).then(response => {
+          let responseContent = document.createElement('div');
+          responseContent.className = 'bot-message';
+          responseContent.textContent = response;
+          responseDiv.appendChild(responseContent);
+
+          outputBox.scrollTop = outputBox.scrollHeight;
+        }).catch(error => {
+          console.error(error);
+        });
+
+        inputBox.value = '';
+      }
+
+      inputBox.addEventListener("keyup", function (event) {
+        if (event.keyCode === 13) {
+          if (inputBox.value.trim() !== "") {
+            sendMsg();
+          }
+        }
+      });
+
+      function fetchBalance() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "https://openai.api2d.net/dashboard/billing/credit_grants");
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("Authorization", `Bearer ${KEY}`);
+        xhr.onreadystatechange = function () {
+          if (this.readyState === 4 && this.status === 200) {
+            const response = JSON.parse(this.responseText);
+            const balance = response.total_available;
+            document.getElementById("balance").value = balance;
+          }
+        };
+        xhr.send();
+      }
+    </script>
+  </body>
+</html>
